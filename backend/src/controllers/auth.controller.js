@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import User from "../models/User.model.js";
 import jwt from "jsonwebtoken";
-
+import Post from "../models/Post.model.js";
 
 // for registering user
 export const registerUser = async (req, res) => {
@@ -21,7 +21,7 @@ export const registerUser = async (req, res) => {
     const user = await User.create({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     res.status(201).json({
@@ -29,15 +29,13 @@ export const registerUser = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 // for login user
 export const loginUser = async (req, res) => {
@@ -65,8 +63,29 @@ export const loginUser = async (req, res) => {
 
     res.json({
       message: "Login successful",
-      token
+      token,
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// get single post by id
+
+export const getSinglePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const post = await Post.findOne({
+      _id: id,
+      isDeleted: false,
+    }).populate("author", "name email");
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.json(post);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

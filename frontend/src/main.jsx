@@ -1,0 +1,23 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import App from "./App";
+import { SWRConfig } from "swr";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <SWRConfig
+          value={{
+            revalidateOnFocus: false,
+            shouldRetryOnError: false
+          }}
+        >
+          <App />
+        </SWRConfig>
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
