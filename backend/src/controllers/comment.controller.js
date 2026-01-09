@@ -1,24 +1,34 @@
+
+
 import Comment from "../models/Comment.model.js";
 import Post from "../models/Post.model.js";
+import {
+  createCommentService,
+  updateCommentService,
+  deleteCommentService,
+} from "../services/comment.service.js";
 
+/**
+ * Create Comment
+ */
 export const createComment = async (req, res) => {
   try {
     const { postId, content } = req.body;
 
-    // Check post exists
+    // Check post existence
     const post = await Post.findById(postId);
     if (!post || post.isDeleted) {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    const comment = await Comment.create({
+    const comment = await createCommentService({
       content,
-      author: req.user.id,
-      post: postId,
+      userId: req.user.id,
+      postId,
     });
 
     res.status(201).json({
-      message: "Comment added successfully",
+      message: "Comment created successfully",
       comment,
     });
   } catch (error) {
@@ -26,8 +36,9 @@ export const createComment = async (req, res) => {
   }
 };
 
-// getCommentsByPost
-
+/**
+ * Get Comments By Post
+ */
 export const getCommentsByPost = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -37,12 +48,14 @@ export const getCommentsByPost = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json(comments);
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// update comment
+/**
+ * Update Comment
+ */
 export const updateComment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -53,7 +66,7 @@ export const updateComment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    // OWNER or ADMIN check
+    // OWNER or ADMIN
     if (
       comment.author.toString() !== req.user.id &&
       req.user.role !== "admin"
@@ -61,20 +74,23 @@ export const updateComment = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    comment.content = content || comment.content;
-    await comment.save();
+    const updatedComment = await updateCommentService({
+      comment,
+      content,
+    });
 
     res.json({
       message: "Comment updated successfully",
-      comment,
+      comment: updatedComment,
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// delete comment
-
+/**
+ * Delete Comment
+ */
 export const deleteComment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -84,7 +100,7 @@ export const deleteComment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    // OWNER or ADMIN check
+    // OWNER or ADMIN
     if (
       comment.author.toString() !== req.user.id &&
       req.user.role !== "admin"
@@ -92,10 +108,10 @@ export const deleteComment = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    await comment.deleteOne();
+    await deleteCommentService(comment);
 
     res.json({ message: "Comment deleted successfully" });
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 };
